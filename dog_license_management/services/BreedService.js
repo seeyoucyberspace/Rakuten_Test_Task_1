@@ -3,11 +3,10 @@ import LicenseDTO from '../data_trade_objects/LicenseDTO.js';
 import _ from 'lodash';
 import logger from '../../shared/utils/logger.js';
 import cache from '../../shared/utils/cache.js';
-import fs from 'fs/promises';
+import fs from 'fs';
 import path from 'path';
 
 class BreedService {
-    // Constructor initializing dependencies and internal data
     constructor({ breedRepository = new BreedRepository(), licenseDTO = LicenseDTO } = {}) {
         this.breedRepository = breedRepository;
         this.licenseDTO = licenseDTO;
@@ -19,7 +18,6 @@ class BreedService {
         this.dataLoaded = false;
     }
 
-    // Loads data from CSV or Excel if it has not already been loaded
     async loadCsv(filePath) {
         try {
             if (this.dataLoaded) return;
@@ -35,15 +33,12 @@ class BreedService {
         }
     }
 
-    // Processes CSV/Excel data and adds it to internal data structures
     processCsvData(data) {
         data.forEach((row) => this.addRowData(row));
         logger.info('CSV data processed and rows added to internal data structure.');
     }
 
-    // Adds a row of data to local arrays for further analysis
     addRowData(row) {
-        // Skip rows where ValidDate is empty
         if (!row.ValidDate) {
             return;
         }
@@ -54,15 +49,16 @@ class BreedService {
         this.data.licenses.push(license);
     }
 
-    // Normalizes breeds by removing whitespace and converting to lowercase, then saves the result
     async normalizeBreeds() {
         try {
             const normalizedBreeds = this.data.breeds.map(breed => breed.trim().toLowerCase());
             const uniqueBreeds = [...new Set(normalizedBreeds)];
             const savePath = path.join('data', 'normalized_breeds', 'normalizedBreeds.json');
 
-            await this.ensureDirectoryExists(path.dirname(savePath));
-            await fs.writeFile(savePath, JSON.stringify(uniqueBreeds, null, 2));
+            if (!fs.existsSync(path.dirname(savePath))) {
+                fs.mkdirSync(path.dirname(savePath), { recursive: true });
+            }
+            fs.writeFileSync(savePath, JSON.stringify(uniqueBreeds, null, 2));
             logger.info('Normalized breeds have been saved to:', savePath);
         } catch (error) {
             logger.error('Error normalizing breeds:', error);
@@ -70,12 +66,10 @@ class BreedService {
         }
     }
 
-    // Retrieves unique breeds from the loaded data
     async getUniqueBreeds() {
         return this.getOrSetCache('uniqueBreeds', () => [...new Set(this.data.breeds)]);
     }
 
-    // Retrieves the count of licenses by breed and LicenseType
     async getLicensesByBreedAndType() {
         try {
             const breedLicenseCounts = {};
@@ -88,8 +82,7 @@ class BreedService {
             });
 
             const savePath = path.join('data', 'normalized_breeds', 'licensesByBreedAndType.json');
-            await this.ensureDirectoryExists(path.dirname(savePath));
-            await fs.writeFile(savePath, JSON.stringify(breedLicenseCounts, null, 2));
+            fs.writeFileSync(savePath, JSON.stringify(breedLicenseCounts, null, 2));
             logger.info('Licenses by breed and type have been saved to:', savePath);
 
             return breedLicenseCounts;
@@ -99,7 +92,6 @@ class BreedService {
         }
     }
 
-    // Retrieves the top N most popular dog names
     async getTopDogNames(count) {
         try {
             const topDogNames = Object.entries(_.countBy(this.data.dogNames))
@@ -108,8 +100,7 @@ class BreedService {
                 .map(([name, count]) => ({ name, count }));
 
             const savePath = path.join('data', 'normalized_breeds', 'topDogNames.json');
-            await this.ensureDirectoryExists(path.dirname(savePath));
-            await fs.writeFile(savePath, JSON.stringify(topDogNames, null, 2));
+            fs.writeFileSync(savePath, JSON.stringify(topDogNames, null, 2));
             logger.info('Top dog names have been saved to:', savePath);
 
             return topDogNames;
@@ -119,7 +110,6 @@ class BreedService {
         }
     }
 
-    // Retrieves licenses valid within the specified date range
     getLicensesByDateRange(startDate, endDate) {
         const start = new Date(startDate);
         const end = new Date(endDate);
@@ -131,7 +121,6 @@ class BreedService {
         return this.data.licenses.filter(({ validDate }) => validDate >= start && validDate <= end);
     }
 
-    // Retrieves data from cache if available, otherwise computes and caches it
     async getOrSetCache(key, computeFunc) {
         const cachedData = cache.get(key);
         if (cachedData) {
@@ -144,27 +133,20 @@ class BreedService {
 
     // Utility function to check if a file exists
     async checkFileExists(filePath) {
-        return fs.access(filePath).then(() => true).catch(() => false);
+        return fs.promises.access(filePath).then(() => true).catch(() => false);
     }
 
     // Utility function to read JSON from a file
     async readJsonFile(filePath) {
-        const fileContent = await fs.readFile(filePath, { encoding: 'utf-8' });
+        const fileContent = await fs.promises.readFile(filePath, { encoding: 'utf-8' });
         return JSON.parse(fileContent);
     }
 
     // Utility function to delete all JSON files in a directory
     async deleteJsonFiles(directory) {
-        const files = await fs.readdir(directory);
+        const files = await fs.promises.readdir(directory);
         const jsonFiles = files.filter(file => file.endsWith('.json'));
-        await Promise.all(jsonFiles.map(file => fs.unlink(path.join(directory, file)).catch(() => {})));
-    }
-
-    // Utility function to ensure a directory exists
-    async ensureDirectoryExists(directory) {
-        if (!await this.checkFileExists(directory)) {
-            await fs.mkdir(directory, { recursive: true });
-        }
+        await Promise.all(jsonFiles.map(file => fs.promises.unlink(path.join(directory, file)).catch(() => {})));
     }
 }
 
