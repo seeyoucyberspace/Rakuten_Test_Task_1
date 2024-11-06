@@ -1,0 +1,29 @@
+{
+  "name": "multi_task_project",
+  "version": "1.0.0",
+  "description": "A project containing multiple tasks including dog license management, API test automation, and data analysis dashboard",
+  "main": "app.js",
+  "scripts": {
+    "start": "node app.js",
+    "test": "mocha \"dog_license_management/specs/**/*.js\""
+  },
+  "type": "module",
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "csv-parser": "^3.0.0",
+    "dotenv": "^16.4.5",
+    "express": "^4.21.1",
+    "joi": "^17.13.3",
+    "jsonwebtoken": "^9.0.2",
+    "lodash": "^4.17.21",
+    "moment": "^2.30.1",
+    "node-cache": "^5.1.2",
+    "winston": "^3.16.0",
+    "xlsx": "^0.18.5"
+  },
+  "devDependencies": {
+    "chai": "^5.1.2",
+    "mocha": "^10.8.2"
+  }
+}
