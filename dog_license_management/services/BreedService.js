@@ -3,7 +3,7 @@ import LicenseDTO from '../data_trade_objects/LicenseDTO.js';
 import _ from 'lodash';
 import logger from '../../shared/utils/logger.js';
 import cache from '../../shared/utils/cache.js';
-import fs from 'fs';
+import fs from 'fs/promises';
 import path from 'path';
 
 class BreedService {
@@ -61,10 +61,8 @@ class BreedService {
             const uniqueBreeds = [...new Set(normalizedBreeds)];
             const savePath = path.join('data', 'normalized_breeds', 'normalizedBreeds.json');
 
-            if (!fs.existsSync(path.dirname(savePath))) {
-                fs.mkdirSync(path.dirname(savePath), { recursive: true });
-            }
-            fs.writeFileSync(savePath, JSON.stringify(uniqueBreeds, null, 2));
+            await this.ensureDirectoryExists(path.dirname(savePath));
+            await fs.writeFile(savePath, JSON.stringify(uniqueBreeds, null, 2));
             logger.info('Normalized breeds have been saved to:', savePath);
         } catch (error) {
             logger.error('Error normalizing breeds:', error);
@@ -90,7 +88,8 @@ class BreedService {
             });
 
             const savePath = path.join('data', 'normalized_breeds', 'licensesByBreedAndType.json');
-            fs.writeFileSync(savePath, JSON.stringify(breedLicenseCounts, null, 2));
+            await this.ensureDirectoryExists(path.dirname(savePath));
+            await fs.writeFile(savePath, JSON.stringify(breedLicenseCounts, null, 2));
             logger.info('Licenses by breed and type have been saved to:', savePath);
 
             return breedLicenseCounts;
@@ -109,7 +108,8 @@ class BreedService {
                 .map(([name, count]) => ({ name, count }));
 
             const savePath = path.join('data', 'normalized_breeds', 'topDogNames.json');
-            fs.writeFileSync(savePath, JSON.stringify(topDogNames, null, 2));
+            await this.ensureDirectoryExists(path.dirname(savePath));
+            await fs.writeFile(savePath, JSON.stringify(topDogNames, null, 2));
             logger.info('Top dog names have been saved to:', savePath);
 
             return topDogNames;
@@ -140,6 +140,31 @@ class BreedService {
         const data = await computeFunc();
         cache.set(key, data);
         return data;
+    }
+
+    // Utility function to check if a file exists
+    async checkFileExists(filePath) {
+        return fs.access(filePath).then(() => true).catch(() => false);
+    }
+
+    // Utility function to read JSON from a file
+    async readJsonFile(filePath) {
+        const fileContent = await fs.readFile(filePath, { encoding: 'utf-8' });
+        return JSON.parse(fileContent);
+    }
+
+    // Utility function to delete all JSON files in a directory
+    async deleteJsonFiles(directory) {
+        const files = await fs.readdir(directory);
+        const jsonFiles = files.filter(file => file.endsWith('.json'));
+        await Promise.all(jsonFiles.map(file => fs.unlink(path.join(directory, file)).catch(() => {})));
+    }
+
+    // Utility function to ensure a directory exists
+    async ensureDirectoryExists(directory) {
+        if (!await this.checkFileExists(directory)) {
+            await fs.mkdir(directory, { recursive: true });
+        }
     }
 }
 
