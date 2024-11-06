@@ -9,4 +9,9 @@ router.get('/load-csv/:filePath', (req, res, next) => {
     breedController.loadAndProcessCsv(req, res, next);
 });
 
+// Route to retrieve licenses by date range
+router.get('/licenses-by-date-range', (req, res, next) => {
+    breedController.getLicensesByDateRange(req, res, next);
+});
+
 export default router;

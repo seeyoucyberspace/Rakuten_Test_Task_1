@@ -1,7 +1,5 @@
 import NodeCache from 'node-cache';
-import config from '../config/appConfig.js';
-
-const { cacheTTL } = config;
+import { cacheTTL } from '../config/appConfig.js';
 
 // Cache with a set TTL for storing intermediate data
 const cache = new NodeCache({ stdTTL: cacheTTL });

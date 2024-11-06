@@ -1,6 +1,4 @@
-import dotenv from 'dotenv';
-
-dotenv.config();
+import 'dotenv/config';
 
 // Project configuration, includes cache parameters, JWT secret, logging level, and port
 const config = {
@@ -10,4 +8,7 @@ const config = {
     port: process.env.PORT || 3000
 };
 
+const { cacheTTL, logLevel } = config;
+
+export { cacheTTL, logLevel };
 export default config;

@@ -1,10 +1,6 @@
 import winston from 'winston';
-import dotenv from 'dotenv';
-import config from '../config/appConfig.js';
-
-const { logLevel } = config;
-
-dotenv.config();
+import 'dotenv/config';
+import { logLevel } from '../config/appConfig.js';
 
 // Logger for logging to console and file
 const logger = winston.createLogger({

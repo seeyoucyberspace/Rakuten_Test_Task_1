@@ -2,8 +2,9 @@ import express from 'express';
 import { handleError } from './shared/utils/errorHandler.js';
 import validateRequest from './shared/middlewares/validateRequest.js';
 import authenticateToken from './shared/middlewares/authenticateToken.js';
+import config from './shared/config/appConfig.js';
+
 import dogLicenseRoutes from './dog_license_management/routes/routes.js';
-import { port } from './shared/config/appConfig.js';
 
 const app = express();
 
@@ -16,6 +17,6 @@ app.use((err, req, res, next) => {
 });
 
 // Starting the server
-app.listen(port, () => {
-    console.log(`Server running on port ${port}`);
+app.listen(config.port, () => {
+    console.log(`Server running on port ${config.port}`);
 });

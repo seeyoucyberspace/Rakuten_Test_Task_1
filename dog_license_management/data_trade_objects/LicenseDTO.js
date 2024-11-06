@@ -1,20 +1,19 @@
 import Joi from 'joi';
 import moment from 'moment';
 
-export default class LicenseDTO {
+class LicenseDTO {
     constructor(data) {
         const value = LicenseDTO.validate(data);
         this.licenseType = value.LicenseType ? value.LicenseType.trim().toLowerCase() : null;
         this.breed = value.Breed.trim().toLowerCase().replace(/\s+/g, '');
         this.color = value.Color ? value.Color.trim().toLowerCase() : null;
         this.dogName = value.DogName.trim().toLowerCase();
-        this.ownerZip = value.OwnerZip ? String(value.OwnerZip) : null; // Преобразование в строку
+        this.ownerZip = value.OwnerZip ? value.OwnerZip.toString() : null;
         this.expYear = value.ExpYear ? value.ExpYear : null;
 
-        // Parsing ValidDate only if it exists
+        // Проверка и разбор ValidDate
         if (value.ValidDate) {
-            // Добавление поддержки нужного формата даты
-            const parsedDate = moment(value.ValidDate, ['MM/DD/YYYY H:mm', 'M/D/YYYY H:mm'], true);
+            const parsedDate = moment(value.ValidDate, ['M/D/YYYY H:mm', 'MM/DD/YYYY HH:mm'], true);
             if (!parsedDate.isValid()) {
                 throw new Error('Invalid License Data: ValidDate must be a valid date');
             }
@@ -24,16 +23,15 @@ export default class LicenseDTO {
         }
     }
 
-    // Method to validate license data using Joi
     static validate(data) {
         const schema = Joi.object({
             LicenseType: Joi.string().optional(),
             Breed: Joi.string().required(),
             Color: Joi.string().optional(),
             DogName: Joi.string().required(),
-            OwnerZip: Joi.alternatives().try(Joi.string(), Joi.number()).optional(), // Разрешаем строку или число
+            OwnerZip: Joi.alternatives().try(Joi.string(), Joi.number()).optional(),
             ExpYear: Joi.number().optional(),
-            ValidDate: Joi.alternatives().try(Joi.string(), Joi.date()).allow('').optional() // Разрешаем строку или дату, в том числе пустую
+            ValidDate: Joi.alternatives().try(Joi.string(), Joi.date()).allow('').optional() // Разрешить строку или дату
         });
 
         const { error, value } = schema.validate(data);
@@ -43,3 +41,5 @@ export default class LicenseDTO {
         return value;
     }
 }
+
+export default LicenseDTO;
