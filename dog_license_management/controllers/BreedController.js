@@ -22,16 +22,6 @@ class BreedController {
         }
     }
 
-    // Retrieves licenses within a specific date range
-    async getLicensesByDateRange(req, res, next) {
-        try {
-            const { startDate, endDate } = req.query;
-            const licenses = await this.breedService.getLicensesByDateRange(startDate, endDate);
-            res.status(200).json(licenses);
-        } catch (error) {
-            next(new ErrorHandler(500, 'Failed to retrieve licenses by date range'));
-        }
-    }
 }
 
 export default BreedController;

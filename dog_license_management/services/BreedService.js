@@ -5,9 +5,11 @@ import logger from '../../shared/utils/logger.js';
 import cache from '../../shared/utils/cache.js';
 import fs from 'fs';
 import path from 'path';
+import moment from 'moment';
 
 class BreedService {
     constructor({ breedRepository = new BreedRepository(), licenseDTO = LicenseDTO } = {}) {
+        // Initialize the BreedService with dependencies and internal data
         this.breedRepository = breedRepository;
         this.licenseDTO = licenseDTO;
         this.data = {
@@ -18,6 +20,7 @@ class BreedService {
         this.dataLoaded = false;
     }
 
+    // Load CSV data into the service if not already loaded
     async loadCsv(filePath) {
         try {
             if (this.dataLoaded) return;
@@ -33,11 +36,13 @@ class BreedService {
         }
     }
 
+    // Process CSV data and add it to internal data structures
     processCsvData(data) {
         data.forEach((row) => this.addRowData(row));
         logger.info('CSV data processed and rows added to internal data structure.');
     }
 
+    // Add a single row of data to the internal data structures
     addRowData(row) {
         if (!row.ValidDate) {
             return;
@@ -49,12 +54,14 @@ class BreedService {
         this.data.licenses.push(license);
     }
 
+    // Normalize breed names by trimming whitespace and converting to lowercase, then save the unique list
     async normalizeBreeds() {
         try {
             const normalizedBreeds = this.data.breeds.map(breed => breed.trim().toLowerCase());
             const uniqueBreeds = [...new Set(normalizedBreeds)];
             const savePath = path.join('data', 'normalized_breeds', 'normalizedBreeds.json');
 
+            // Create directory if it doesn't exist
             if (!fs.existsSync(path.dirname(savePath))) {
                 fs.mkdirSync(path.dirname(savePath), { recursive: true });
             }
@@ -66,10 +73,12 @@ class BreedService {
         }
     }
 
+    // Retrieve a list of unique breeds, using cache if available
     async getUniqueBreeds() {
         return this.getOrSetCache('uniqueBreeds', () => [...new Set(this.data.breeds)]);
     }
 
+    // Get the count of licenses by breed and license type, and save the results to a file
     async getLicensesByBreedAndType() {
         try {
             const breedLicenseCounts = {};
@@ -92,6 +101,7 @@ class BreedService {
         }
     }
 
+    // Get the top N most popular dog names based on the loaded data
     async getTopDogNames(count) {
         try {
             const topDogNames = Object.entries(_.countBy(this.data.dogNames))
@@ -110,17 +120,39 @@ class BreedService {
         }
     }
 
-    getLicensesByDateRange(startDate, endDate) {
-        const start = new Date(startDate);
-        const end = new Date(endDate);
+    // Get the licenses issued within a specific date range
+    async getLicensesByDateRange(startDate, endDate) {
+        try {
+            const start = moment(startDate, 'MM/DD/YYYY').toDate();
+            const end = moment(endDate, 'MM/DD/YYYY').toDate();
 
-        if (isNaN(start) || isNaN(end)) {
-            throw new Error('Invalid date format');
+            if (isNaN(start) || isNaN(end)) {
+                throw new Error('Invalid date format');
+            }
+
+            const licensesInRange = this.data.licenses.filter(({ validDate }) => {
+                const date = new Date(validDate);
+                return date >= start && date <= end;
+            });
+
+            // Convert validDate to ISO string before saving
+            const licensesWithFormattedDate = licensesInRange.map(license => ({
+                ...license,
+                validDate: new Date(license.validDate).toISOString()
+            }));
+
+            const savePath = path.join('data', 'normalized_breeds', 'licensesByDateRange.json');
+            await fs.promises.writeFile(savePath, JSON.stringify(licensesWithFormattedDate, null, 2));
+            logger.info('Licenses issued in the given date range have been saved to:', savePath);
+
+            return licensesWithFormattedDate;
+        } catch (error) {
+            logger.error('Error getting licenses by date range:', error);
+            throw error;
         }
-
-        return this.data.licenses.filter(({ validDate }) => validDate >= start && validDate <= end);
     }
 
+    // Get data from cache if available, otherwise compute and cache it
     async getOrSetCache(key, computeFunc) {
         const cachedData = cache.get(key);
         if (cachedData) {
@@ -129,11 +161,6 @@ class BreedService {
         const data = await computeFunc();
         cache.set(key, data);
         return data;
-    }
-
-    // Utility function to check if a file exists
-    async checkFileExists(filePath) {
-        return fs.promises.access(filePath).then(() => true).catch(() => false);
     }
 
     // Utility function to read JSON from a file

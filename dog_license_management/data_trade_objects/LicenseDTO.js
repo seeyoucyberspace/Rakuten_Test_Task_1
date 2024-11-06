@@ -11,7 +11,6 @@ class LicenseDTO {
         this.ownerZip = value.OwnerZip ? value.OwnerZip.toString() : null;
         this.expYear = value.ExpYear ? value.ExpYear : null;
 
-        // Проверка и разбор ValidDate
         if (value.ValidDate) {
             const parsedDate = moment(value.ValidDate, ['M/D/YYYY H:mm', 'MM/DD/YYYY HH:mm'], true);
             if (!parsedDate.isValid()) {
