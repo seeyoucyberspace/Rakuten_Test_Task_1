@@ -1,8 +1,5 @@
 
-# Multi Task Project - Dog License Management
-
-## Overview
-This project provides a solution for managing dog licenses using a large dataset in CSV format. The focus of the project is on extracting, normalizing, and analyzing the data to produce meaningful results, such as creating unique breed lists, calculating license counts by breed, and identifying popular dog names. The project also includes API endpoints to facilitate the use of the data.
+# Dog License Management
 
 ## Objective
 The main objectives of this project include:
@@ -88,29 +85,8 @@ This will execute all the test files in the `dog_license_management/specs/` fold
 ## Installation
 
 1. Clone the repository:
-   ```sh
-   git clone <repository_url>
-   ```
+
 2. Install the required dependencies:
    ```sh
    npm install
    ```
-3. Set up the environment variables:
-   - Copy the `.env.example` to `.env` and fill in the required information.
-4. Run the project:
-   ```sh
-   node app.js
-   ```
-
-## Notes
-- The dataset (2017.csv) is expected to be located in the `data/` directory.
-- Environment variables are used to store sensitive information, such as paths and API keys.
-- All methods are accompanied by proper comments to explain their functionality.
-
-## Future Improvements
-- Extend the testing suite to cover additional edge cases.
-- Implement a UI dashboard for visualizing the data using charting libraries.
-- Add more advanced filtering and search capabilities for licenses.
-
-## License
-This project is licensed under the ISC License.
