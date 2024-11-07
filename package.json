@@ -1,10 +1,9 @@
 {
   "name": "multi_task_project",
   "version": "1.0.0",
-  "description": "A project containing multiple tasks including dog license management, API test automation, and data analysis dashboard",
+  "description": "A project containing multiple tasks including dog license management",
   "main": "app.js",
   "scripts": {
-    "start": "node app.js",
     "test": "mocha \"dog_license_management/specs/**/*.js\""
   },
   "type": "module",
